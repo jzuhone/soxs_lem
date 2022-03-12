@@ -38,5 +38,5 @@ Alternatively, to install into your Python distribution from source:
 
 ## Documentation
 
-SOXS: https://hea-www.cfa.harvard.edu/soxs
+SOXS: https://hea-www.cfa.harvard.edu/soxs  
 pyXSIM: https://hea-www.cfa.harvard.edu/~jzuhone/pyxsim
