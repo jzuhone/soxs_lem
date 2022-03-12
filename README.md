@@ -7,6 +7,8 @@ updated over time.
 
 ## Installing pyXSIM and SOXS
 
+pyXSIM and SOXS require Python 3.8 or later. 
+
 pyXSIM and SOXS can be installed in a few different ways. The simplest way is via the conda package if
 you have the [Anaconda Python Distribution](https://store.continuum.io/cshop/anaconda/):
 
@@ -33,3 +35,8 @@ Alternatively, to install into your Python distribution from source:
 [~]$ cd pyxsim
 [~]$ python -m pip install .
 ```
+
+## Documentation
+
+SOXS: https://hea-www.cfa.harvard.edu/soxs
+pyXSIM: https://hea-www.cfa.harvard.edu/~jzuhone/pyxsim
