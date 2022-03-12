@@ -1,11 +1,11 @@
-## SOXS LEM Scripts
+# SOXS LEM Scripts
 
 This repository collects a set of scripts to use for LEM simulations of various sources. It will be
 updated over time. 
 
 * `cgm_example.py`: simulations of the CGM using various galactic halos
 
-# Installing pyXSIM and SOXS
+## Installing pyXSIM and SOXS
 
 pyXSIM and SOXS can be installed in a few different ways. The simplest way is via the conda package if
 you have the [Anaconda Python Distribution](https://store.continuum.io/cshop/anaconda/):
