@@ -177,20 +177,32 @@ n_events = pyxsim.project_photons(f"{sim}_photons", f"{sim}_events", "z", sky_ce
 events = pyxsim.EventList(f"{sim}_events.h5")
 events.write_to_simput(sim, overwrite=True)
 
-# We make a separate background events file and spectrum--this will be used to 
-# compare to the files without the source. For now, we turn off the CXB point-source 
-# component.
+# Set the instrument to use--either "lem_2eV" or "lem_0.9eV"
 
-soxs.make_background_file("lem_bkgnd_evt.fits", exp_time, "lem", sky_center, 
-                          overwrite=True, ptsrc_bkgnd=False)
-soxs.write_spectrum("lem_bkgnd_evt.fits", "lem_bkgnd_evt.pi", overwrite=True)
+instr = "lem_2eV"
 
-# We can now use this SIMPUT catalog to make a mock LEM observation. We also 
-# ignore the point-source background here for now.
+# We make a separate events files for the background components. We can always add
+# them to the events file later. This one is for the Galactic foreground only:
 
-soxs.instrument_simulator(f"{sim}_simput.fits", f"{sim}_evt.fits", 
-                          exp_time, "lem", sky_center, overwrite=True,
-                          ptsrc_bkgnd=False)
+soxs.make_background_file(f"{instr}_frgnd_evt.fits", exp_time, instr,
+                          sky_center, overwrite=True, ptsrc_bkgnd=False, prng=24)
+soxs.write_spectrum(f"{instr}_frgnd_evt.fits", f"{instr}_frgnd_evt.pi",
+                    overwrite=True)
+
+# This one is for the CXB only:
+
+soxs.make_background_file(f"{instr}_ptsrc_evt.fits", exp_time, instr,
+                          sky_center, overwrite=True, foreground=False, prng=24)
+soxs.write_spectrum(f"{instr}_ptsrc_evt.fits", f"{instr}_ptsrc_evt.pi",
+                    overwrite=True)
+
+# We can now use this SIMPUT catalog to make a mock LEM observation. We turn off
+# all backgrounds here.
+
+soxs.instrument_simulator(f"{sim}_simput.fits", f"{sim}_{instr}_evt.fits", 
+                          exp_time, instr, sky_center, overwrite=True,
+                          ptsrc_bkgnd=False, foreground=False,
+                          instr_bkgnd=False)
 
 # This produces an event file. This can be used to make images, spectra, and radial 
 # profiles with FTOOLS, CIAO, etc., in much the same way as real X-ray observations. 
@@ -213,9 +225,9 @@ fig, axes = plt.subplots(ncols=3, nrows=1, figsize=(21,7))
 width = 0.6 # degrees
 for i, (band, ebounds) in enumerate(bands.items()):
     ax = axes[i]
-    soxs.write_image(f"{sim}_evt.fits", f"{sim}_{band}_img.fits", emin=ebounds[0], 
+    soxs.write_image(f"{sim}_{instr}_evt.fits", f"{sim}_{instr}_{band}_img.fits", emin=ebounds[0], 
                      emax=ebounds[1], overwrite=True)
-    with fits.open(f"{sim}_{band}_img.fits") as f:
+    with fits.open(f"{sim}_{instr}_{band}_img.fits") as f:
         w = wcs.WCS(header=f[0].header)
         dx_pix = width / w.wcs.cdelt[0]
         dy_pix = width / w.wcs.cdelt[1]
@@ -230,11 +242,11 @@ for i, (band, ebounds) in enumerate(bands.items()):
         ax.text(0.1, 0.83, band.replace("_", " "), color='white', fontsize=30, 
                 transform=ax.transAxes)
 fig.subplots_adjust(wspace=0.05)
-fig.savefig(f"{sim}_images.png")
+fig.savefig(f"{sim}_{instr}_images.png")
     
 # We can also make a spectrum of the whole source:
 
-soxs.write_spectrum(f"{sim}_evt.fits", f"{sim}_evt.pi", overwrite=True)
+soxs.write_spectrum(f"{sim}_{instr}_evt.fits", f"{sim}_{instr}_evt.pi", overwrite=True)
 
 # and plot the spectrum for the three different redshifted lines:
 
@@ -246,10 +258,10 @@ plt.rc("ytick.minor", width=2, size=3)
 fig, axes = plt.subplots(ncols=3, nrows=1, figsize=(21,7))
 for i, (band, ebounds) in enumerate(bands.items()):
     ax = axes[i]
-    soxs.plot_spectrum("lem_bkgnd_evt.pi",xmin=ebounds[0]-0.02, xmax=ebounds[1]+0.02, 
-                       xscale="linear", fig=fig, ax=ax, yscale='log', label="Background Only")
-    soxs.plot_spectrum(f"{sim}_evt.pi", xmin=ebounds[0]-0.02, xmax=ebounds[1]+0.02, 
-                       xscale="linear", fig=fig, ax=ax, yscale='log', label="All Emission")
+    soxs.plot_spectrum(f"{instr}_frgnd_evt.pi",xmin=ebounds[0]-0.02, xmax=ebounds[1]+0.02, 
+                       xscale="linear", fig=fig, ax=ax, yscale='log', label="Foreground Only")
+    soxs.plot_spectrum(f"{sim}_{instr}_evt.pi", xmin=ebounds[0]-0.02, xmax=ebounds[1]+0.02, 
+                       xscale="linear", fig=fig, ax=ax, yscale='log', label="CGM Emission")
     ax.set_ylim(0.5, 350)
     if i > 0:
         ax.set_ylabel('')
@@ -257,5 +269,5 @@ for i, (band, ebounds) in enumerate(bands.items()):
         ax.legend()
     ax.text(0.1, 0.7, band.replace("_", " "), color='black', fontsize=30, 
             transform=ax.transAxes)
-fig.savefig(f"{sim}_spectra.png")
+fig.savefig(f"{sim}_{instr}_spectra.png")
 
